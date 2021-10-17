@@ -52,9 +52,9 @@ bool DlvDebuggerPlugin::load(LiteApi::IApplication *app)
         return false;
     }
 #ifdef USE_DLVCLIENT
-    DlvRpcDebugger *debug = new DlvRpcDebugger(app);
+    DlvDebugger *debug = new DlvDebugger(app);//do not have variable view,stack view...
 #else
-    DlvDebugger *debug = new DlvDebugger(app);
+    DlvRpcDebugger *debug = new DlvRpcDebugger(app);
 #endif
     manager->addDebugger(debug);
     manager->setCurrentDebugger(debug);

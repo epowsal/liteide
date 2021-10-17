@@ -30,6 +30,7 @@
 #include "qtc_gdbmi/gdbmi.h"
 #include "dlvclient/dlvclient.h"
 #include <QSet>
+#include <QFile>
 
 class QProcess;
 class LiteProcess;
@@ -186,6 +187,7 @@ protected:
     bool    m_dlvInit;
     bool    m_dlvExit;
     bool    m_headlessInitAddress;
+    QFile   *dlvrpclog;
 };
 
 #endif // DLVRPCDEBUGGER_H

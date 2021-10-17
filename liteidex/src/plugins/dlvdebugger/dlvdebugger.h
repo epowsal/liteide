@@ -30,6 +30,7 @@
 #include "qtc_gdbmi/gdbmi.h"
 
 #include <QSet>
+#include <QFile>
 
 class QProcess;
 class LiteProcess;
@@ -152,6 +153,7 @@ protected:
     bool    m_dlvExit;
     bool    m_headlessInitAddress;
     bool    m_headlessMode;
+    QFile   *dlvlog;
 };
 
 #endif // DLVDEBUGGER_H

@@ -87,6 +87,8 @@ DlvRpcDebugger::DlvRpcDebugger(LiteApi::IApplication *app, QObject *parent) :
     m_liteApp(app),
     m_envManager(0)
 {
+    dlvrpclog=new QFile("dlvrpcdebug.log");
+    dlvrpclog->open(QFile::OpenModeFlag::WriteOnly|QFile::OpenModeFlag::Truncate);
     m_process = new LiteProcess(m_liteApp,this);
     m_process->setUseCtrlC(true);
 
@@ -390,21 +392,26 @@ void DlvRpcDebugger::removeAllWatch()
 
 void DlvRpcDebugger::showFrame(QModelIndex index)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QStandardItem* file = m_framesModel->item( index.row(), 3 );
     QStandardItem* line = m_framesModel->item( index.row(), 4 );
     if( !file || !line ) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     QString filename = file->text();
     int lineno = line->text().toInt();
     if( lineno <= 0 ) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     emit setFrameLine(filename, lineno - 1 );
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::expandItem(QModelIndex index, LiteApi::DEBUG_MODEL_TYPE type)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QStandardItem *parent = 0;
     if (type == LiteApi::VARS_MODEL) {
         parent = m_varsModel->itemFromIndex(index);
@@ -418,6 +425,7 @@ void DlvRpcDebugger::expandItem(QModelIndex index, LiteApi::DEBUG_MODEL_TYPE typ
         return;
     }
     parent->setData(1,VarExpanded);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::setInitBreakTable(const QMultiMap<QString,int> &bks)
@@ -483,25 +491,35 @@ bool DlvRpcDebugger::findBreakPoint(const QString &fileName, int line)
 
 void DlvRpcDebugger::command_helper(const QByteArray &cmd, bool force)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (m_writeDataBusy && !force) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     m_writeDataBusy = true;
     m_lastCmd = cmd;
-
+dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (m_dlvRunningCmdList.contains(cmd)) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         m_asyncItem->removeRows(0,m_asyncItem->rowCount());
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         m_asyncItem->setText("runing");
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     }
 #ifdef Q_OS_WIN
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_process->write(cmd+"\r\n");
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 #else
     m_process->write(cmd+"\n");
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 #endif
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::enterAppText(const QString &text)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_updateCmdList.clear();
     m_updateCmdHistroy.clear();
 
@@ -511,10 +529,12 @@ void DlvRpcDebugger::enterAppText(const QString &text)
     }
 
     m_headlessProcess->write(text.toUtf8());
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::enterDebugText(const QString &text)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_updateCmdList.clear();
     m_updateCmdHistroy.clear();
 
@@ -524,6 +544,7 @@ void DlvRpcDebugger::enterDebugText(const QString &text)
     }
 
     command(text.toUtf8());
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void  DlvRpcDebugger::command(const QByteArray &cmd)
@@ -533,6 +554,7 @@ void  DlvRpcDebugger::command(const QByteArray &cmd)
 
 void DlvRpcDebugger::readStdError()
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     //Process 4084 has exited with status 0
     QString data = QString::fromUtf8(m_process->readAllStandardError());
    // qDebug() << data << m_processId;
@@ -544,6 +566,7 @@ void DlvRpcDebugger::readStdError()
             this->stop();
         }
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 
@@ -556,9 +579,12 @@ void DlvRpcDebugger::readStdError()
 
 void DlvRpcDebugger::handleResponse(const QByteArray &buff)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (buff.isEmpty()) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
+
     //Process restarted with PID 4532
     //> main.main() H:/goproj/src/hello/main.go:13 (hits goroutine(1):1 total:1) (PC: 0x401172)
     //> main.main() H:/goproj/src/hello/main.go:14 (PC: 0x401179)
@@ -574,6 +600,7 @@ void DlvRpcDebugger::handleResponse(const QByteArray &buff)
         static QRegExp reg(">(\\s+\\[[\\w\\d]+\\])?\\s+([\\w\\d_\\.\\%\\*\\(\\)\\/]+)\\(\\)\\s+((?:[a-zA-Z]:)?[\\w\\d_@\\s\\-\\/\\.\\\\]+):(\\d+)\\s?(.*)\\s?(\\(PC:\\s+.*)");
         int n = reg.indexIn(QString::fromUtf8(buff));
         if (n < 0) {
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             return;
         }
         QString fileName = reg.cap(3);
@@ -616,6 +643,7 @@ void DlvRpcDebugger::handleResponse(const QByteArray &buff)
         m_asyncItem->appendRow(new QStandardItem("line="+line));
         emit setExpand(LiteApi::ASYNC_MODEL,m_asyncModel->indexFromItem(m_asyncItem),true);
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::cleanup()
@@ -625,6 +653,7 @@ void DlvRpcDebugger::cleanup()
 
 void DlvRpcDebugger::clear()
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_headlessInitAddress = false;
     m_lastFileLine = 0;
     m_lastFileName.clear();
@@ -647,6 +676,7 @@ void DlvRpcDebugger::clear()
     m_goroutinesModel->removeRows(0,m_goroutinesModel->rowCount());
     m_varsModel->removeRows(0,m_varsModel->rowCount());
     m_watchModel->removeRows(0,m_watchModel->rowCount());
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::initDebug()
@@ -719,6 +749,7 @@ static QString valueToolTip(const QString &value)
 
 void DlvRpcDebugger::readStdOutput()
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QByteArray data = m_process->readAllStandardOutput();
     if (!m_dlvInit) {
         m_dlvInit = true;
@@ -727,6 +758,7 @@ void DlvRpcDebugger::readStdOutput()
     m_writeDataBusy = false;
 
     if (m_dlvExit) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
 
@@ -742,6 +774,7 @@ void DlvRpcDebugger::readStdOutput()
         dlv_check = m_inbuffer.indexOf("(dlv)") != -1;
     }
     if (dlv_check && !m_inbuffer.endsWith("(dlv) ")) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
 
@@ -750,6 +783,7 @@ void DlvRpcDebugger::readStdOutput()
         return;
     QStringList dataList;
     while (newstart < m_inbuffer.size()) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         int start = newstart;
         int end = m_inbuffer.indexOf('\n', scan);
         if (end < 0) {
@@ -773,7 +807,9 @@ void DlvRpcDebugger::readStdOutput()
         dataList.append(QString::fromUtf8(data));
         handleResponse(data);
         m_readDataBusy = false;
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 
 //    if (m_checkFuncDecl) {
 //        if (m_lastFileName == m_funcDecl.fileName && m_lastFileLine >= m_funcDecl.start && m_lastFileLine <= m_funcDecl.end) {
@@ -800,7 +836,9 @@ void DlvRpcDebugger::readStdOutput()
              QStringList dataList = data.split("\n",QString::SkipEmptyParts);
              bool head = true;
              QList<QStandardItem*> items;
+             dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
              foreach (QString data, dataList) {
+                 dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
                  if (head) {
                     // data.
                      items.clear();
@@ -828,6 +866,7 @@ void DlvRpcDebugger::readStdOutput()
                     }
                  }
                  head = !head;
+                 dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
              }
         } else if (cmdHistroy == "stack 0 -full") {
             // s = " \x04S\x00\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x00\x00\x00"
@@ -838,6 +877,7 @@ void DlvRpcDebugger::readStdOutput()
             QStringList dataList = data.split("\n",QString::SkipEmptyParts);
             QMap<QString,QString> nameMap;
             foreach(QString text, dataList) {
+                dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
                 int n = text.indexOf("=");
                 if (n == -1) {
                     continue;
@@ -861,10 +901,14 @@ void DlvRpcDebugger::readStdOutput()
 #endif
                 }
                 m_varsModel->appendRow(QList<QStandardItem*>() << nameItem << valueItem);
+                dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             }
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             m_checkVarsMap = nameMap;
         } else if (cmdHistroy.startsWith("vars ")) {
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             foreach (QString data, QString::fromUtf8(m_inbuffer).split("\n",QString::SkipEmptyParts)) {
+                dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
                 int n = data.indexOf("=");
                 if (n >= 0) {
                     QString name = data.left(n-1);
@@ -906,25 +950,34 @@ void DlvRpcDebugger::readStdOutput()
                     }
                     m_watchNameMap.insert(name,value);
                 }
+                dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             }
         }
         emitLog = false;
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (emitLog) {
          emit debugLog(LiteApi::DebugConsoleLog,QString::fromUtf8(m_inbuffer));
     }
     m_inbuffer.clear();
 
     if (m_handleState.exited() && !m_dlvExit) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         m_dlvExit = true;
         stop();
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     } else if (m_handleState.stopped()) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         DebuggerState state = m_dlvClient->GetState();
-        if (state.pCurrentThread) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
+        if (state.pCurrentThread) {//oktest7
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             m_updateCmdList.clear();
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             //m_updateCmdList << "stack";// << "stack 0 -full";
 
             int id = state.pCurrentThread->GoroutineID;
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             updateStackframe(id);
             updateVariable(id);
             updateWatch(id);
@@ -932,20 +985,26 @@ void DlvRpcDebugger::readStdOutput()
             updateGoroutines();
             updateRegisters(state.pCurrentThread->ID,true);
         }
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     }
-
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_handleState.clear();
 
     if (!m_updateCmdList.isEmpty()) {
         foreach(QString cmd, m_updateCmdList.takeFirst().split("|")) {
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
             m_updateCmdHistroy.push_back(cmd.trimmed());
             command(cmd.trimmed().toUtf8());
+            dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         }
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::updateWatch(int id)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Variable> watch;
     QList<QString> errList;
     foreach (QString s, m_watchList) {
@@ -980,10 +1039,12 @@ void DlvRpcDebugger::updateWatch(int id)
     updateVariableHelper(watch,m_watchModel,0,"",0,saveMap,m_checkWatchMap);
     m_checkWatchMap = saveMap;
     emit endUpdateModel(LiteApi::WATCHES_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::updateVariable(int id)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Variable> vars = m_dlvClient->ListLocalVariables(EvalScope(id),LoadConfig::Long128(3));
     QList<Variable> args = m_dlvClient->ListFunctionArgs(EvalScope(id),LoadConfig::Long128(3));
 
@@ -994,15 +1055,21 @@ void DlvRpcDebugger::updateVariable(int id)
     updateVariableHelper(vars,m_varsModel,0,"",0,saveMap,m_checkVarsMap);
     m_checkVarsMap = saveMap;
     emit endUpdateModel(LiteApi::VARS_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::updateStackframe(int id)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Stackframe> frames = m_dlvClient->Stacktrace(id,128,LoadConfig::Long128(3));
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     emit beginUpdateModel(LiteApi::CALLSTACK_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     m_framesModel->removeRows(0,m_framesModel->rowCount());
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     int index = 0;
     foreach(Stackframe f, frames) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         QList<QStandardItem*> items;
         items << new QStandardItem(QString("%1").arg(index));
         items << new QStandardItem(QString("0x%1").arg(qulonglong(f.PC),16,16,QLatin1Char('0')));
@@ -1015,8 +1082,11 @@ void DlvRpcDebugger::updateStackframe(int id)
         items << new QStandardItem(QString("%1").arg(f.Line));
         m_framesModel->appendRow(items);
         index++;
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     emit endUpdateModel(LiteApi::CALLSTACK_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 static bool threadIdThan(const Thread &s1, const Thread &s2)
@@ -1029,6 +1099,7 @@ static bool threadIdThan(const Thread &s1, const Thread &s2)
 
 void DlvRpcDebugger::updateThreads(const QList<Thread> &threads)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Thread> ths = threads;
     qSort(ths.begin(),ths.end(),threadIdThan);
     emit beginUpdateModel(LiteApi::THREADS_MODEL);
@@ -1046,6 +1117,7 @@ void DlvRpcDebugger::updateThreads(const QList<Thread> &threads)
         m_threadsModel->appendRow(QList<QStandardItem*>() << item << gitem << pc << func << file << line);
     }
     emit endUpdateModel(LiteApi::THREADS_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 static void appendLocationItem(QStandardItem *parent, const QString &name, const Location &loc)
@@ -1060,6 +1132,7 @@ static void appendLocationItem(QStandardItem *parent, const QString &name, const
 
 void DlvRpcDebugger::updateGoroutines()
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Goroutine> lst = m_dlvClient->ListGoroutines();
     emit beginUpdateModel(LiteApi::GOROUTINES_MODEL);
     m_goroutinesModel->removeRows(0,m_goroutinesModel->rowCount());
@@ -1075,10 +1148,12 @@ void DlvRpcDebugger::updateGoroutines()
         m_goroutinesModel->appendRow(item);
     }
     emit endUpdateModel(LiteApi::GOROUTINES_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::updateRegisters(int threadid, bool includeFp)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QList<Register> regs = m_dlvClient->ListRegisters(threadid,includeFp);
     emit beginUpdateModel(LiteApi::REGS_MODEL);
     m_registersModel->removeRows(0,m_registersModel->rowCount());
@@ -1099,6 +1174,7 @@ void DlvRpcDebugger::updateRegisters(int threadid, bool includeFp)
     }
     m_checkRegsMap = saveMap;
     emit endUpdateModel(LiteApi::REGS_MODEL);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 static Variable parserRealVar(const Variable &var)
@@ -1113,6 +1189,7 @@ static Variable parserRealVar(const Variable &var)
 
 void DlvRpcDebugger::updateVariableHelper(const QList<Variable> &vars, QStandardItemModel *model, QStandardItem *parent, const QString &parentName, int flag, QMap<QString,QString> &saveMap, const QMap<QString,QString> &checkMap)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     int index = -1;
     foreach (Variable var, vars) {
         index++;
@@ -1179,6 +1256,7 @@ void DlvRpcDebugger::updateVariableHelper(const QList<Variable> &vars, QStandard
             model->appendRow(QList<QStandardItem*>() << nameItem << typeItem << valueItem << addrItem);
         }
     }
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::finished(int code)
@@ -1257,6 +1335,7 @@ static void buildListId(QStandardItem *item, const QVariant &var, const QString 
 
 void DlvRpcDebugger::headlessReadStdOutput()
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     QString data = QString::fromUtf8(m_headlessProcess->readAllStandardOutput());
     //API server listening at: 127.0.0.1:54151
     if (!m_headlessInitAddress) {
@@ -1313,6 +1392,7 @@ void DlvRpcDebugger::headlessReadStdOutput()
     }
 
     emit debugLog(LiteApi::DebugApplationLog,data);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::headlessFinished(int code)
@@ -1336,6 +1416,7 @@ void DlvRpcDebugger::clientCommandSuccess(const QString &/*method*/, const Debug
 
 void DlvRpcDebugger::updateState(const DebuggerState &state, const QVariant &jsonData)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (state.Exited) {
         stop();
     }
@@ -1370,16 +1451,20 @@ void DlvRpcDebugger::updateState(const DebuggerState &state, const QVariant &jso
 //        }
 //    }
     emit setExpand(LiteApi::ASYNC_MODEL,m_asyncModel->indexFromItem(m_asyncItem),true);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }
 
 void DlvRpcDebugger::watchItemChanged(QStandardItem *item)
 {
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
     if (!item || item->column() != 0) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     QString oldName = item->data(VarNameRole).toString();
     QString newName = item->text();
     if (oldName == newName) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     emit watchRemoved(oldName);
@@ -1394,7 +1479,9 @@ void DlvRpcDebugger::watchItemChanged(QStandardItem *item)
     }
     DebuggerState state = m_dlvClient->GetState();
     if (!state.pCurrentThread) {
+        dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
         return;
     }
     updateWatch(state.pCurrentThread->GoroutineID);
+    dlvrpclog->write(QString("%1 %2\n").arg(__FUNCTION__).arg(__LINE__).toUtf8());dlvrpclog->flush();
 }

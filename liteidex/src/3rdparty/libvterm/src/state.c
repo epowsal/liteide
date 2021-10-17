@@ -242,7 +242,7 @@ static int on_text(const char bytes[], size_t len, void *user)
   VTermPos oldpos = state->pos;
 
   // We'll have at most len codepoints
-  uint32_t codepoints[len];
+  uint32_t *codepoints=(uint32_t*)malloc(len);
   int npoints = 0;
   size_t eaten = 0;
 
@@ -259,9 +259,10 @@ static int on_text(const char bytes[], size_t len, void *user)
   /* There's a chance an encoding (e.g. UTF-8) hasn't found enough bytes yet
    * for even a single codepoint
    */
-  if(!npoints)
-    return eaten;
-
+  if(!npoints){
+    free(codepoints);
+	return eaten;
+  }
   if(state->gsingle_set && npoints)
     state->gsingle_set = 0;
 
@@ -319,7 +320,7 @@ static int on_text(const char bytes[], size_t len, void *user)
 
     int width = 0;
 
-    uint32_t chars[glyph_ends - glyph_starts + 1];
+    uint32_t *chars=(uint32_t*)malloc(glyph_ends - glyph_starts + 1);
 
     for( ; i < glyph_ends; i++) {
       chars[i - glyph_starts] = codepoints[i];
@@ -389,6 +390,7 @@ static int on_text(const char bytes[], size_t len, void *user)
     else {
       state->pos.col += width;
     }
+	free(chars);
   }
 
   updatecursor(state, &oldpos, 0);
@@ -401,6 +403,7 @@ static int on_text(const char bytes[], size_t len, void *user)
     abort();
   }
 #endif
+  free(codepoints);
 
   return eaten;
 }
@@ -518,11 +521,12 @@ static int settermprop_int(VTermState *state, VTermProp prop, int v)
 
 static int settermprop_string(VTermState *state, VTermProp prop, const char *str, size_t len)
 {
-  char strvalue[len+1];
+  char *strvalue=(char*)malloc(len+1);
   strncpy(strvalue, str, len);
   strvalue[len] = 0;
 
   VTermValue val = { .string = strvalue };
+  free(strvalue);
   return vterm_state_set_termprop(state, prop, &val);
 }
 

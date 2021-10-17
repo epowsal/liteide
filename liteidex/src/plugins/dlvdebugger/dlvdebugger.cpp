@@ -86,6 +86,9 @@ DlvDebugger::DlvDebugger(LiteApi::IApplication *app, QObject *parent) :
     m_liteApp(app),
     m_envManager(0)
 {
+    dlvlog=new QFile("dlvdebug.log");
+    //dlvlog->open(QFile::OpenModeFlag::WriteOnly|QFile::OpenModeFlag::Truncate);
+
     m_process = new LiteProcess(m_liteApp,this);
     m_process->setUseCtrlC(true);
 
@@ -201,6 +204,8 @@ bool DlvDebugger::start(const QString &cmd, const QString &arguments)
     if (!m_envManager) {
         return false;
     }
+    //dlvlog->write("207 start");
+    //dlvlog->flush();
 
     QProcessEnvironment env = LiteApi::getGoEnvironment(m_liteApp);
 
@@ -255,6 +260,8 @@ bool DlvDebugger::start(const QString &cmd, const QString &arguments)
         QString log = QString("%1 %2 [%3]").arg(m_dlvFilePath).arg(argsList.join(" ")).arg(m_process->workingDirectory());
         emit debugLog(LiteApi::DebugRuntimeLog,log);
     }
+    //dlvlog->write("207 end");
+    //dlvlog->flush();
 
     return true;
 }
@@ -264,6 +271,9 @@ void DlvDebugger::stop()
     if (m_dlvExit) {
         return;
     }
+    //dlvlog->write("274 start");
+    //dlvlog->flush();
+
     m_dlvExit = true;
     if (m_headlessMode) {
         if (!m_headlessProcess->isStop()) {
@@ -281,6 +291,7 @@ void DlvDebugger::stop()
                 m_process->kill();
             }
         }
+
     } else {
         if (!m_process->isStop()) {
             m_process->interrupt();
@@ -290,6 +301,12 @@ void DlvDebugger::stop()
              m_process->kill();
         }
     }
+
+    QProcess::execute("taskkill",QStringList()<<"/f"<<"/im"<<"dlv.exe");
+
+    //dlvlog->write("274 end");
+    //dlvlog->flush();
+
 }
 
 bool DlvDebugger::isRunning()
@@ -367,6 +384,9 @@ void DlvDebugger::createWatch(const QString &var)
 
 void DlvDebugger::removeWatch(const QString &value)
 {
+    //dlvlog->write("383 start");
+    //dlvlog->flush();
+
     m_watchNameMap.remove(value);
     for (int i = 0; i < m_watchModel->rowCount(); i++) {
         QStandardItem *nameItem = m_watchModel->item(i,0);
@@ -376,16 +396,29 @@ void DlvDebugger::removeWatch(const QString &value)
         }
     }
     emit watchRemoved(value);
+    //dlvlog->write("383 end");
+    //dlvlog->flush();
+
 }
 
 void DlvDebugger::removeAllWatch()
 {
+    //dlvlog->write("402start");
+    //dlvlog->flush();
+
     m_watchNameMap.clear();
     m_watchModel->removeRows(0,m_watchModel->rowCount());
+
+    //dlvlog->write("402 end");
+    //dlvlog->flush();
+
 }
 
 void DlvDebugger::showFrame(QModelIndex index)
 {
+    //dlvlog->write("415 start");
+    //dlvlog->flush();
+
     QStandardItem* file = m_framesModel->item( index.row(), 3 );
     QStandardItem* line = m_framesModel->item( index.row(), 4 );
     if( !file || !line ) {
@@ -397,6 +430,9 @@ void DlvDebugger::showFrame(QModelIndex index)
         return;
     }
     emit setFrameLine(filename, lineno - 1 );
+    //dlvlog->write("415 start");
+    //dlvlog->flush();
+
 }
 
 void DlvDebugger::expandItem(QModelIndex index, LiteApi::DEBUG_MODEL_TYPE type)
@@ -473,25 +509,45 @@ bool DlvDebugger::findBreakPoint(const QString &fileName, int line)
 
 void DlvDebugger::command_helper(const QByteArray &cmd, bool force)
 {
+    //dlvlog->write("DlvDebugger::command_helper 479");
+    //dlvlog->flush();
     if (m_writeDataBusy && !force) {
         return;
     }
+    //dlvlog->write("DlvDebugger::command_helper 484");
+    //dlvlog->flush();
     m_writeDataBusy = true;
     m_lastCmd = cmd;
 
     if (m_dlvRunningCmdList.contains(cmd)) {
+        //dlvlog->write("DlvDebugger::command_helper 490");
+        //dlvlog->flush();
         m_asyncItem->removeRows(0,m_asyncItem->rowCount());
+        //dlvlog->write("DlvDebugger::command_helper 493");
+        //dlvlog->flush();
         m_asyncItem->setText("runing");
+        //dlvlog->write("DlvDebugger::command_helper 496");
+        //dlvlog->flush();
     }
+    //dlvlog->write("DlvDebugger::command_helper 499");
+    //dlvlog->flush();
 #ifdef Q_OS_WIN
     m_process->write(cmd+"\r\n");
+    //dlvlog->write("DlvDebugger::command_helper 503");
+    //dlvlog->flush();
 #else
     m_process->write(cmd+"\n");
+    //dlvlog->write("DlvDebugger::command_helper 507");
+    //dlvlog->flush();
 #endif
+    //dlvlog->write("DlvDebugger::command_helper 509");
+    //dlvlog->flush();
 }
 
 void DlvDebugger::enterAppText(const QString &text)
 {
+    //dlvlog->write("516 start");
+    //dlvlog->flush();
     m_updateCmdList.clear();
     m_updateCmdHistroy.clear();
 
@@ -505,10 +561,14 @@ void DlvDebugger::enterAppText(const QString &text)
     } else {
         m_process->write(text.toUtf8());
     }
+    //dlvlog->write("516 end");
+    //dlvlog->flush();
 }
 
 void DlvDebugger::enterDebugText(const QString &text)
 {
+    //dlvlog->write("536 start");
+    //dlvlog->flush();
     m_updateCmdList.clear();
     m_updateCmdHistroy.clear();
 
@@ -518,6 +578,8 @@ void DlvDebugger::enterDebugText(const QString &text)
     }
 
     command(text.toUtf8());
+    //dlvlog->write("536 end");
+    //dlvlog->flush();
 }
 
 void  DlvDebugger::command(const QByteArray &cmd)
@@ -527,6 +589,8 @@ void  DlvDebugger::command(const QByteArray &cmd)
 
 void DlvDebugger::readStdError()
 {
+    //dlvlog->write("588 start");
+    //dlvlog->flush();
     //Process 4084 has exited with status 0
     QString data = QString::fromUtf8(m_process->readAllStandardError());
    // qDebug() << data << m_processId;
@@ -538,6 +602,9 @@ void DlvDebugger::readStdError()
             this->stop();
         }
     }
+
+    //dlvlog->write("588 end");
+    //dlvlog->flush();
 }
 
 
@@ -553,6 +620,8 @@ void DlvDebugger::handleResponse(const QByteArray &buff)
     if (buff.isEmpty()) {
         return;
     }
+    //dlvlog->write("582 start");
+    //dlvlog->flush();
     if (!m_headlessMode) {
         if (m_processId.isEmpty()) {
             //Process restarted with PID
@@ -577,6 +646,8 @@ void DlvDebugger::handleResponse(const QByteArray &buff)
         static QRegExp reg(">(\\s+\\[[\\w\\d]+\\])?\\s+([\\w\\d_\\.\\%\\*\\(\\)\\/]+)\\(\\)\\s+((?:[a-zA-Z]:)?[\\w\\d_@\\s\\-\\/\\.\\\\]+):(\\d+)\\s?(.*)\\s?(\\(PC:\\s+.*)");
         int n = reg.indexIn(QString::fromUtf8(buff));
         if (n < 0) {
+            //dlvlog->write("607");
+            //dlvlog->flush();
             return;
         }
         QString fileName = reg.cap(3);
@@ -619,6 +690,8 @@ void DlvDebugger::handleResponse(const QByteArray &buff)
         m_asyncItem->appendRow(new QStandardItem("line="+line));
         emit setExpand(LiteApi::ASYNC_MODEL,m_asyncModel->indexFromItem(m_asyncItem),true);
     }
+    //dlvlog->write("582 end");
+    //dlvlog->flush();
 }
 
 void DlvDebugger::cleanup()
@@ -725,6 +798,8 @@ static QString valueToolTip(const QString &value)
 
 void DlvDebugger::readStdOutput()
 {
+    //dlvlog->write("757 start");
+    //dlvlog->flush();
     QByteArray data = m_process->readAllStandardOutput();
     if (!m_dlvInit) {
         m_dlvInit = true;
@@ -733,6 +808,8 @@ void DlvDebugger::readStdOutput()
     m_writeDataBusy = false;
 
     if (m_dlvExit) {
+        //dlvlog->write("757 end");
+        //dlvlog->flush();
         return;
     }
 
@@ -748,12 +825,17 @@ void DlvDebugger::readStdOutput()
         dlv_check = m_inbuffer.indexOf("(dlv)") != -1;
     }
     if (dlv_check && !m_inbuffer.endsWith("(dlv) ")) {
+        //dlvlog->write("757 end");
+        //dlvlog->flush();
         return;
     }
 
     // This can trigger when a dialog starts a nested event loop.
-    if (m_readDataBusy)
+    if (m_readDataBusy){
+        //dlvlog->write("757 end");
+        //dlvlog->flush();
         return;
+    }
     QStringList dataList;
     while (newstart < m_inbuffer.size()) {
         int start = newstart;
@@ -940,6 +1022,8 @@ void DlvDebugger::readStdOutput()
             command(cmd.trimmed().toUtf8());
         }
     }
+    //dlvlog->write("757 end");
+    //dlvlog->flush();
 }
 
 void DlvDebugger::finished(int code)
@@ -970,6 +1054,8 @@ void DlvDebugger::headlessReadStdError()
 
 void DlvDebugger::headlessReadStdOutput()
 {
+    //dlvlog->write("1008 start");
+    //dlvlog->flush();
     QString data = QString::fromUtf8(m_headlessProcess->readAllStandardOutput());
     //API server listening at: 127.0.0.1:54151
     if (!m_headlessInitAddress) {
@@ -999,6 +1085,8 @@ void DlvDebugger::headlessReadStdOutput()
     }
 
     emit debugLog(LiteApi::DebugApplationLog,data);
+    //dlvlog->write("1008 end");
+    //dlvlog->flush();
 }
 
 void DlvDebugger::headlessFinished(int code)
